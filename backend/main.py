@@ -66,6 +66,52 @@ def create_contact():
             return jsonify({"message": str(exception_object)}), 400
         # Return message along with status code for "creation".
         return jsonify({"message": "User created!"}), 201
+    
+# Route for updating a contact's information in the database. 
+# Example endpoint:  /update_contact/1 
+@app.route("/update_contact/<int:user_id>", methods = ["PATCH"])
+def update_contact(user_id):
+    # Look in the database and find the user that has this id.
+    contact = Contact.query.get(user_id)
+    
+    # If no user is found with that id
+    if not contact:
+        return jsonify({"message": "User not found."}), 404
+    # Otherwise...
+    else:
+        # The data given to us.
+        data = request.json
+        # Update the contact's first name to be the first name given to us.
+        #
+        # get() looks for the key "firstName" in the data given to us. If it 
+        # exists, it'll return that key's value. If it doesn't, it'll return 
+        # the value associated with the second argument.
+        contact.first_name = data.get("firstName", contact.first_name)
+        
+        contact.last_name = data.get("lastName", contact.last_name)
+        contact.email = data.get("email", contact.email)
+        # Since the contact already exists, it doesn't need to be staged again.
+        # We can just commit.
+        db.session.commit()
+        
+        return jsonify({"message": "User updated."}), 200
+
+# Route for deleting a contact from the database.
+# Example endpoint:  /delete_contact/1 
+@app.route("/delete_contact/<int:user_id>", methods = ["DELETE"])
+def delete_contact(user_id):
+    # Look in the database and find the user that has this id.
+    contact = Contact.query.get(user_id)
+    
+    # If no user is found with that id
+    if not contact:
+        return jsonify({"message": "User not found."}), 404
+    # Otherwise...
+    else:
+        db.session.delete(contact)
+        db.session.commit()
+        
+        return jsonify({"message": "User deleted."}), 200
 
 # A condition that protects against running the app unless we
 # intentionally run it.
