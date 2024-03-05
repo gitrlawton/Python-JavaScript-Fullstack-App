@@ -1,9 +1,15 @@
 import {useState} from "react"
 
-const ContactForm = ({}) => {
-    const [firstName, setFirstName] = useState("")
-    const [lastName, setLastName] = useState("")
-    const [email, setEmail] = useState("")
+// Takes in our existing contact (if one exists.)
+const ContactForm = ({ existingContact = {}, updateCallback }) => {
+    // If one exists, use their values, otherwise, have an empty string.
+    const [firstName, setFirstName] = useState(existingContact.firstName || "");
+    const [lastName, setLastName] = useState(existingContact.lastName ||"");
+    const [email, setEmail] = useState(existingContact.email || "");
+
+    // If we're passing an existing contact, the length will not be 0.
+    // Thus, we will be updating.
+    const updating = Object.entries(existingContact).length !== 0
 
     const onSubmit = async (e) => {
         // Do not refresh the page automatically.
@@ -16,13 +22,19 @@ const ContactForm = ({}) => {
             email
         }
 
-        // Specifying URL endpoint for adding new contact information (the
+        // Specify URL endpoint for adding new contact information (the
         // endpoint we set up to receive POST requests in our backend.)
-        const url = "http://127.0.0.1:5000/create_contact"
+        // or updating existing contact information based on dynamic data.
+        // If updating variable is set to true, then set url to 
+        // localhost:5000/update_contact/${existingContact.id}
+        // Otherwise, set it to localhost:5000/create_contact
+        const url = "http://127.0.0.1:5000/" + (
+            updating ? `update_contact/${existingContact.id}` : "create_contact"
+        )
         // When you're doing something other than a GET request, you need 
         // to specify options.
         const options = {
-            method: "POST",
+            method: updating ? "PATCH" : "POST",
             headers: {
                 // Signals that we're about to send json data.
                 "Content-Type": "application/json"
@@ -41,7 +53,8 @@ const ContactForm = ({}) => {
         }
         // Otherwise, it was successful.
         else {
-
+            // Tell App.jsx we're finished, and to close the modal.
+            updateCallback();
         }
 
         
@@ -76,7 +89,7 @@ const ContactForm = ({}) => {
                     onChange={(e) => setEmail(e.target.value)}
                 />
             </div>
-            <button type="submit">Create Contact</button>
+            <button type="submit">{updating ? "Update" : "Create"}</button>
         </form>
     );
 };
